@@ -1,0 +1,479 @@
+
+import pandas as pd
+import re
+import torch
+import torch.nn as nn 
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from torch.utils.data import Dataset
+import numpy as np
+from datetime import datetime
+from sklearn.preprocessing import MinMaxScaler
+from torch.utils.data import TensorDataset, DataLoader
+from torch.optim.lr_scheduler import StepLR, ReduceLROnPlateau
+import torch.nn.functional as F
+
+def read_excel_with_multiple_sheets(file_path):
+    """
+    读取包含多个sheet的Excel文件
+    
+    参数:
+        file_path (str): Excel文件路径
+        
+    返回:
+        dict: 以sheet名为键，DataFrame为值的字典
+    """
+    try:
+        # 使用pandas读取所有sheet
+        excel_data = pd.read_excel(file_path, sheet_name=None)
+        return excel_data
+    except Exception as e:
+        print(f"读取Excel文件时出错: {e}")
+        return None
+
+def extract_columns(file_path, sheet_name, columns, header=0):
+    """
+    提取Excel指定sheet中的特定列
+    
+    参数:
+        file_path (str): Excel文件路径
+        sheet_name (str): 工作表名称
+        columns (list): 需要提取的列名列表或列索引列表
+        header (int): 表头行号，默认为0
+    
+    返回:
+        DataFrame: 包含指定列的数据
+    """
+    try:
+        df = pd.read_excel(file_path, sheet_name=sheet_name, header=header)
+        return df[columns] if isinstance(columns, list) else df[[columns]]
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        return None
+
+def split_event_column(df, column_name):
+    """
+    将格式为"[时间戳] 事件编号：事件内容"的列拆分成三列
+    参数:
+        df: 原始DataFrame
+        column_name: 需要拆分的列名
+    返回:
+        处理后的DataFrame
+    """
+    # 定义正则表达式匹配模式（捕获组）
+    pattern = r'\[(.*?)\]\s*(\d+):\s*(.*)'
+    
+    # 创建临时副本避免SettingWithCopyWarning
+    result_df = df.copy()
+    
+    # 拆分列并赋值
+    result_df[['TimeStamp', 'EventType', 'EventContent']] = result_df[column_name].str.extract(pattern)
+    
+    # 删除原始列
+    result_df.drop(column_name, axis=1, inplace=True)
+    
+    return result_df
+
+def merge_tables(table1, table2, insertAfterColumn):
+    # 左连接合并
+
+    # 右表转换
+    table2['Log id no'] = table2['Log id no'].astype(str)
+
+    mergedTable = pd.merge(
+        left = table1,
+        right = table2[['Log id no', 'Grouping', 'Category']],
+        left_on = 'EventType',
+        right_on = 'Log id no',
+        how='left'
+    )
+
+    # 调整列顺序
+    cols = list(table1.columns)
+    insert_pos = cols.index(insertAfterColumn) + 1
+    new_cols = cols[:insert_pos] + ['Grouping', 'Category'] + cols[insert_pos:]
+
+    # 根据新的列顺序返回表格
+    return mergedTable[new_cols]
+
+def encodeEntireTable(df):
+    #创建原始数据副本，后续操作均在副本上进行
+    df = df.copy()
+
+    # 时间类型转换
+    # 转换时间格式（YYMMDD HHMMSS -> datetime64[ns]）
+    df.loc[:, 'TS'] = pd.to_datetime(df['TimeStamp'],
+        format='%y%m%d %H%M%S',  # 格式说明：%y两位年份 %m月 %d日 %H时 %M分 %S秒
+        errors='coerce'  # 无效时间转为NaT
+    ).astype('datetime64[ns]')  # 强制转为numpy的datetime64类型
+
+    # 事件类型编码(应该考虑全部ID还是数据集中的ID - 应考虑数据集中的ID)，通常不需要再进行归一化
+    le = LabelEncoder()
+    df.loc[:, 'logID_encoded'] = le.fit_transform(df['EventType'])
+    num = len(le.classes_)
+    le = LabelEncoder()
+    df.loc[:, 'grouping_encoded'] = le.fit_transform(df['Grouping'])
+    le = LabelEncoder()
+    df.loc[:, 'category_encoded'] = le.fit_transform(df['Category'])
+
+    # 星期编码（无再需归一化）
+    df.loc[:, 'day_sin'] = np.sin(2 * np.pi * df['TS'].dt.dayofweek / 7)
+    df.loc[:, 'day_cos'] = np.cos(2 * np.pi * df['TS'].dt.dayofweek / 7)
+
+    # 小时编码（无再需归一化）
+    df.loc[:, 'hour_sin'] = np.sin(2 * np.pi * df['TS'].dt.hour / 24)
+    df.loc[:, 'hour_cos'] = np.cos(2 * np.pi * df['TS'].dt.hour / 24)
+
+    # 分钟编码（无再需归一化）
+    df.loc[:, 'minute_sin'] = np.sin(2 * np.pi * df['TS'].dt.minute / 60)
+    df.loc[:, 'minute_cos'] = np.cos(2 * np.pi * df['TS'].dt.minute / 60)
+
+    return df, num
+
+def normalize_feature(f1, f2, matrix_list):
+
+    matrix_np = np.array(matrix_list)
+    #print(matrix_np.shape)
+    feature1 = matrix_np[:, :, f1-1].reshape(-1, 1)
+    feature2 = matrix_np[:, :, f2-1].reshape(-1, 1)
+    
+    # 初始化并训练MinMaxScaler
+    scaler1 = MinMaxScaler().fit(feature1)
+    scaler2 = MinMaxScaler().fit(feature2)
+
+    # 标准化并写回原矩阵
+    normalized_feature1 = scaler1.transform(feature1).reshape(matrix_np.shape[0], matrix_np.shape[1])
+    matrix_np[:, :, f1-1] = normalized_feature1   
+    normalized_feature2 = scaler2.transform(feature2).reshape(matrix_np.shape[0], matrix_np.shape[1])
+    matrix_np[:, :, f2-1] = normalized_feature2   
+    matrix_list = matrix_np.tolist()
+
+    return matrix_list
+
+def print_progress(count_serial, unique_serial_count):
+
+    blk = int(unique_serial_count * 0.1)
+
+    percentage = (count_serial / unique_serial_count) * 100
+
+    if count_serial == 1 or count_serial % blk == 0 or count_serial == unique_serial_count :
+        print(f"Current progress: {percentage:.1f}% ({count_serial}/{unique_serial_count})")
+
+class LSTMTimeSeries(nn.Module):
+
+    #定义LSTM模型（hideen_size通常为特征数量的4-8倍）
+    def __init__(self, hidden_size=64, num_layers=1, num_classes=2):
+        super(LSTMTimeSeries, self).__init__()
+        # 输入维度为11（因为每个时间步有11个特征），隐藏层大小可调
+        self.lstm = nn.LSTM(input_size=11, hidden_size=hidden_size, 
+                            num_layers=num_layers, batch_first=True)
+        
+        #self.bn = nn.BatchNorm1d(hidden_size)  # BN层（通道数=hidden_size）
+        #self.relu = nn.ReLU()
+        self.drop1 = nn.Dropout(0.3) #添加dropout
+        self.fc = nn.Linear(hidden_size, num_classes)  # 最终输出1个值
+        
+    def forward(self, x):
+        # x 形状: (batch, seq_len, 11)
+        out, (h_n, c_n) = self.lstm(x)  
+        # out的形状: (batch, seq_len, hidden_size)
+        # 取最后一个时间步的输出
+        last_out = out[:, -1, :]  # (batch, hidden_size)
+        dropped_out = self.drop1(last_out)  # 调用dropout
+        final_out = self.fc(dropped_out)   # (batch, 1)
+        return final_out
+    
+class LSTMTimeSeriesAttention(nn.Module):
+
+    #定义LSTM模型（hideen_size通常为特征数量的4-8倍）
+    def __init__(self, hidden_size=64, num_layers=1, num_classes=2):
+        super(LSTMTimeSeriesAttention, self).__init__()
+        # 输入维度为11（因为每个时间步有11个特征），隐藏层大小可调
+        self.lstm = nn.LSTM(input_size=11, hidden_size=hidden_size, 
+                            num_layers=num_layers, batch_first=True)
+        
+        self.attention_weights = nn.Linear(hidden_size, 1)
+
+        # 新增注意力机制层
+        self.attention = nn.Sequential(
+            nn.Linear(hidden_size, hidden_size//2),
+            nn.Tanh(),
+            nn.Linear(hidden_size//2, 1)
+        )
+
+        self.drop1 = nn.Dropout(0.3) #添加dropout
+        self.fc = nn.Linear(hidden_size, num_classes)  # 最终输出1个值
+        
+    def forward(self, x):
+        # x 形状: (batch, seq_len, 11)
+        out, (h_n, c_n) = self.lstm(x)  
+        # out的形状: (batch, seq_len, hidden_size)
+        
+        # 计算注意力权重
+        attn_weights = self.attention(out)  # (batch, seq_len, 1)
+        attn_weights = F.softmax(attn_weights.squeeze(-1), dim=1)  # (batch, seq_len)
+        # 加权求和
+        context = torch.bmm(attn_weights.unsqueeze(1), out).squeeze(1)
+
+        # 取最后一个时间步的输出
+        last_out = out[:, -1, :]  # (batch, hidden_size)
+        dropped_out = self.drop1(context)  # 调用dropout
+        final_out = self.fc(dropped_out)   # (batch, 1)
+        return final_out
+    
+def train_one_epoch(model, optimizer, criterion, train_loader, epoch):
+    model.train() #显示调用，打开梯度计算和dropout
+    total_loss = 0.0
+    for batch_x, batch_y in train_loader:
+            optimizer.zero_grad()
+            outputs = model(batch_x)
+            loss = criterion(outputs, batch_y)
+            loss.backward()
+            optimizer.step()
+            total_loss += loss.item()
+    avg_train_loss = total_loss / len(train_loader)
+    print(f'Epoch {epoch+1}, Train Loss: {avg_train_loss:.4f}')
+    return avg_train_loss
+
+def validate(model, test_loader, criterion, epoch):
+    model.eval()
+    total_loss = 0.0
+    correct = 0
+    with torch.no_grad():
+        for x, y in test_loader:
+            outputs = model(x)
+            _, predicted = torch.max(outputs.data, 1)
+            loss = criterion(outputs, y)
+            total_loss += loss.item()
+            correct += (predicted == y).sum().item()
+    avg_val_loss = total_loss / len(test_loader)
+    print(f'Epoch {epoch+1}, Validation Loss: {avg_val_loss:.4f}, Accuracy: {100*correct/len(test_dataset):.2f}%')
+    return avg_val_loss
+
+def datasetShuffle(train_x, test_x, train_y, test_y, isShuffle=False):
+    if isShuffle:
+        #将训练集和测试集先合并、打乱再重新分割 - 全局打乱
+        # 合并数据集
+        combined_x = np.concatenate((train_x, test_x), axis=0)
+        combined_y = np.concatenate((train_y, test_y), axis=0)
+
+        # 生成随机索引并打乱数据
+        indices = np.arange(combined_x.shape[0])
+        np.random.shuffle(indices)  # 原地打乱
+
+        shuffled_x = combined_x[indices]
+        shuffled_y = combined_y[indices]
+
+        # 按原始比例分割
+        train_size = np.array(train_x).shape[0]  # 原始训练集大小
+
+        new_train_x = shuffled_x[:train_size]
+        new_train_y = shuffled_y[:train_size]
+        new_test_x = shuffled_x[train_size:]
+        new_test_y = shuffled_y[train_size:]
+
+        # 重新验证形状用new_否则用原始数据，而后仅在epoch内随机打乱
+        print(f"New train_x shape: {new_train_x.shape}")  # 应输出 (411391, 20, 11)
+        print(f"New train_y shape: {new_train_y.shape}")  # 应输出 (411391,)
+        print(f"New test_x shape: {new_test_x.shape}")    # 应输出 (80770, 20, 11)
+        print(f"New test_y shape: {new_test_y.shape}")    # 应输出 (80770,)
+    else:
+        new_train_x = train_x
+        new_train_y = train_y
+        new_test_x = test_x
+        new_test_y = test_y
+    return new_train_x, new_train_y, new_test_x, new_test_y
+
+# 使用示例
+if __name__ == "__main__":
+    file_path = r"C:\Users\exingen\OneDrive - Ericsson\Desktop\INT2\AI\AI+Log\Data\LSTM Data\PDP_submit_pattern_result_ezhuxdi_20250604_020551\PDP_submit_pattern_result_ezhuxdi_20250604_020551.xlsx"  # 替换为你的Excel文件路径
+    file_path_output = r"C:\Users\exingen\OneDrive - Ericsson\Desktop\INT2\AI\AI+Log\Data\LSTM Data\PDP_submit_pattern_result_ezhuxdi_20250604_020551\tempoutput.xlsx"
+    file_path_mapping = r"C:\Users\exingen\OneDrive - Ericsson\Desktop\INT2\AI\AI+Log\Data\LSTM Data\elog_and_hwlog_lookup_PA18.xlsx"
+    faultEvent = ["52"]
+    windowSize = 50
+    stride = 1
+
+    # Step 1. 读取Submit Pattern Result Sheet，提取"Alarm_Name"为空的行且仅保留如下列（AuditDate, Serial, ProductName, PartName, ProductNo, HWrev, Production, Alarm_time, Alarm_Name, AdditionalInfo）
+    interestedContent = extract_columns(file_path, "Submit Pattern Result", ["AuditDate", "Serial", "ProductName", "PartName", "ProductNo", "HWrev", "Production", "Alarm_time", "Alarm_Name", "AdditionalInfo"], header=0)
+    submitPatternResultFiltered = interestedContent[interestedContent["Alarm_Name"].isna()]
+
+    # Step 2. 读取Submit Pattern Lines Sheet, 根据Step 1.中的Serial号筛选该sheet的内容
+    serial = submitPatternResultFiltered["Serial"].dropna().unique()
+    submitPatternLines = pd.read_excel(file_path, "Submit Pattern Lines")
+    submitPatternLinesFiltered = submitPatternLines[submitPatternLines["Serial"].isin(serial)].iloc[:, :-1]
+
+    # Step 3. 对于Step 2 .筛选后的表格，删除每个产品号对应log的最后一行”End of log",然后将log_line列拆分。
+    submitPatternLinesFiltered = submitPatternLinesFiltered[submitPatternLinesFiltered["log_line"] != "End of log"]
+    submitPatternLinesFiltered = split_event_column(submitPatternLinesFiltered, "log_line")
+   
+    # Step 4. 对于Step 3.处理后的表格，对于每一个产品号，根据Submit Pattern Lines Sheet中EventType筛选。对于不包含筛选条件的产品号及其所对应的全部内容给予保留。并统计这样的产品号有多少个。
+    serialWithFault = submitPatternLinesFiltered[submitPatternLinesFiltered["EventType"].isin(faultEvent)]["Serial"].unique()
+    submitPatternLinesNoFault = submitPatternLinesFiltered[~submitPatternLinesFiltered["Serial"].isin(serialWithFault)]
+    
+    # Step 5. elog mapping信息保存在一个excel表格中，读取该表格中的Grouping/Category信息，将该信息插入到submiPatternLinesNoFault，并将表格另存为一个新的表格
+    submitPatternLinesNoFault = submitPatternLinesFiltered[~submitPatternLinesFiltered["Serial"].isin(serialWithFault)]
+    table2 = pd.read_excel(file_path_mapping, sheet_name='elogIds', header=0)
+    submitPatternLinesNoFaultWithGrouping = merge_tables(submitPatternLinesNoFault, table2, 'EventType')
+    ##submitPatternLinesNoFaultWithGrouping.to_excel(file_path_output, index=False)
+    
+    # tep 6. 判断有无极端序列（<=windowSize），有则舍弃
+    ## 统计每个Serial的EventType数量
+    eventCounts = submitPatternLinesNoFaultWithGrouping.groupby('Serial')['EventType'].count()
+    ## 获取需要保留的Serial列表（EventType数量>windowSize）
+    validSerials = eventCounts[eventCounts > windowSize].index
+    ## print(validSerials)
+    ## 过滤原始数据, drop由elog10产生的TimeStamp = NaN
+    submitPatternLinesNoFaultWithGroupingFiltered = submitPatternLinesNoFaultWithGrouping[submitPatternLinesNoFaultWithGrouping['Serial'].isin(validSerials)].dropna(subset=['TimeStamp'])
+    ## 保存结果(could skip to speed up)
+    #submitPatternLinesNoFaultWithGroupingFiltered.to_excel(file_path_output, index=False)
+
+    # Step 7. Encoding - 暂时不考虑padding，根据上表构建训练测试集。f1: elog ID, f2: Grouping, f3:Category, f4/5: day时间周期特征, f6/7: hour时间周期特征，f8/9: minute时间周期特征，f10: 时间间隔特征, f11: 事件密度特征
+    ## 此步先完成整体编码的特征，随时间窗口编码的特征在Step 8.
+    ## logIDs作为事件类别数作为LSTM的输出数量
+    entireEncode, logIDs = encodeEntireTable(submitPatternLinesNoFaultWithGroupingFiltered)
+    ## print(entireEncode)
+
+    # Step 8. 构造数据 - 首先构造一个X/Y列表，列表维度(batch, windowSize = 20, featureSize = 11)，对于Step 7表格中的每个Serial, 通过滑动窗口取出windowSize个数据，并用下一个数据作为target，不停重复上述过程装入数据，直到完成所有Serial
+    train_x = []
+    train_y = []   
+    test_x = []
+    test_y = []
+    unique_serial_count = entireEncode['Serial'].nunique()
+    training_size = int(unique_serial_count * 0.8) #将80%的产品日志作为训练集，20%作为测试集
+    count_serial = 0
+    count_serial_sample_sum = 0 #累计值 for training
+    count_serial_sample_sum_test = 0 #累计值 for test
+    print("Training Data Preparation Start:")
+    print(f"Num of training serials: {training_size}")
+    print(f"Num of Test serials: {unique_serial_count - training_size}")
+
+    for serial, group in entireEncode.groupby('Serial'):
+        
+        count_serial_sample = 0 #单个Serial的sample值, for training
+        count_serial_sample_test = 0 #单个Serial的sample值, for test
+        count_serial = count_serial + 1
+        #print(f"当前处理串号为: {serial}" )
+        # 提取ID/Group/Category/Time特征矩阵 [timesteps(纵向) × features（横向9）]
+        feature_matrix = np.column_stack([group[col].values for col in ['logID_encoded', 'grouping_encoded', 'category_encoded', 'day_sin', 'day_cos', 'hour_sin', 'hour_cos', 'minute_sin', 'minute_cos']])
+        
+        # 根据滑动窗口统计窗口内特征，并生成数据
+        if len(feature_matrix) > windowSize:
+            for i in range(0, len(feature_matrix) - windowSize, stride):
+                if count_serial <= training_size:
+                    count_serial_sample = count_serial_sample + 1
+                    count_serial_sample_sum = count_serial_sample_sum + 1
+                else:
+                    count_serial_sample_test = count_serial_sample_test + 1
+                    count_serial_sample_sum_test = count_serial_sample_sum_test + 1
+                #print("count serial sample:", count_serial_sample)
+                # 创建一个空的DataFrame
+                temp_df = pd.DataFrame()
+
+                # 时间间隔编码（需要再进行归一化，应注意不应该在窗口内归一化，应该全局归一化，为避免信息泄露应对训练集和测试集分别进行），按照Serial区分设备归一化。
+                temp_df['time_diff'] = group['TS'].iloc[i:i+windowSize].diff().dt.total_seconds().fillna(0)
+                #scaler = StandardScaler()
+                # 负值或者极大值修正, 处理重启时GPS丢失带来的时间混乱（后续可预先处理时间戳不连续问题）
+                condition = (temp_df['time_diff'] >= 0) & (temp_df['time_diff'] <= 90000)
+                temp_df['time_diff'] = temp_df['time_diff'].where(condition, 0)
+                time_span = temp_df['time_diff'].sum()
+                #scaled_values = scaler.fit_transform(temp_df[['time_diff']])
+
+                # 事件跨度编码（避免极小值）-时间步级复制，即用窗口的平均密度复制到各个事件个体中
+                #density = windowSize / time_span
+                feature_density = np.array([time_span] * windowSize)
+                # 将timediff和density两个特征合并
+                feature_timediff_density = np.vstack((temp_df.to_numpy().flatten(), feature_density)).T
+                # 将合并后的特征与前序特征合并
+                seq = np.hstack((feature_matrix[i:i+windowSize], feature_timediff_density))
+                label = group['logID_encoded'].iloc[i+windowSize]
+
+                if count_serial <= training_size:
+                    train_x.append(seq)
+                    train_y.append(label)
+                else:
+                    test_x.append(seq)
+                    test_y.append(label)
+
+            # 此处是某个Serial的数据集合
+            if count_serial <= training_size:
+
+                # 提取所有矩阵的第10/11个特征（索引为9/10）
+                train_x[count_serial_sample_sum - count_serial_sample:count_serial_sample_sum] = normalize_feature(10, 11, train_x[count_serial_sample_sum - count_serial_sample:count_serial_sample_sum])
+            else:
+                test_x[count_serial_sample_sum_test - count_serial_sample_test:count_serial_sample_sum_test] = normalize_feature(10, 11, test_x[count_serial_sample_sum_test - count_serial_sample_test:count_serial_sample_sum_test])
+                
+        # 打印进度
+        print_progress(count_serial, unique_serial_count)
+
+    # 数据处理完毕，检查
+    print("train_x shape is: ", np.array(train_x).shape)
+    print("train_y shape is: ", np.array(train_y).shape)
+    print("test_x shape is: ", np.array(test_x).shape)
+    print("test_y shape is: ", np.array(test_y).shape)
+
+    # 打乱
+    shuffle_train_x, shuffle_train_y, shuffle_test_x, shuffle_test_y = datasetShuffle(train_x, test_x, train_y, test_y, isShuffle=False)
+
+    # Step 9. 转成pytorch张量并使用数据加载器
+    # 转成 PyTorch 张量
+    train_x_tensor = torch.tensor(shuffle_train_x, dtype=torch.float32)  # (batch, seq_len, 11)
+    train_y_tensor = torch.tensor(shuffle_train_y, dtype=torch.long)  # (batch)
+    test_x_tensor = torch.tensor(shuffle_test_x, dtype=torch.float32)
+    test_y_tensor = torch.tensor(shuffle_test_y, dtype=torch.long)
+
+    # 检查张量的形状
+    print("Shape of train_x_tensor is: ", train_x_tensor.shape)
+    print("shape of train_y_tensor is: ", train_y_tensor.shape)
+    print("Shape of test_x_tensor is: ", test_x_tensor.shape)
+    print("shape of test_y_tensor is: ", test_y_tensor.shape)
+
+    # 启动数据加载器
+    # 创建数据集对象
+    train_dataset = TensorDataset(train_x_tensor, train_y_tensor)
+    test_dataset = TensorDataset(test_x_tensor, test_y_tensor)
+
+    # 设置batch_size参数（根据内存调整）
+    batch_size = 64  # 推荐初始值
+    train_loader = DataLoader(
+        dataset=train_dataset,
+        batch_size=batch_size,
+        shuffle=True,  # 打乱数据顺序
+        num_workers=0,  # CPU环境设为0
+        drop_last=False  # 保留不完整批次
+        )
+
+    test_loader = DataLoader(
+        dataset=test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0
+        )
+    
+    # Step 10. 建立LSTM模型
+    #model = LSTMTimeSeries(hidden_size=64, num_layers=1, num_classes=logIDs)
+    model = LSTMTimeSeriesAttention(hidden_size=64, num_layers=1, num_classes=logIDs)
+    criterion = nn.CrossEntropyLoss()
+    # Adam优化器
+    #optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    # AdamW优化器
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)
+
+
+    # 三阶段调度器组合
+    #warmup_scheduler = StepLR(optimizer, step_size=5, gamma=1.0)  # 前10epoch保持lr
+    decay_scheduler = StepLR(optimizer, step_size=10, gamma=0.8)   # 1-40epoch每10步变为上一步80%
+    #fine_scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=2) # 最后5epoch自适应
+
+    # Step 11. 训练模型+验证模型+学习率动态调整
+    epochs = 40
+    for epoch in range(epochs):
+        
+        # 训练步骤
+        train_loss = train_one_epoch(model, optimizer, criterion, train_loader, epoch)
+
+        # 验证步骤
+        val_loss = validate(model, test_loader, criterion, epoch)
+
+        decay_scheduler.step()   # 逐步衰减
+        
+        print(f'Epoch {epoch+1}: lr={optimizer.param_groups[0]["lr"]:.2e}')
+        print(f"Epoch {epoch+1}: WD={optimizer.param_groups[0]['weight_decay']:.2e}")

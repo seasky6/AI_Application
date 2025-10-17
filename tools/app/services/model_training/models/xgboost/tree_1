@@ -1,0 +1,36 @@
+digraph {
+    graph [ rankdir=TB ]
+    graph [ rankdir="LR" ]
+
+    0 [ label="IDpaSv:.1<-0.261581182" ]
+    0 -> 1 [label="yes" color="#FF0000"]
+    0 -> 2 [label="no, missing" color="#0000FF"]
+
+    1 [ label="txAtt<-0.00100809662" ]
+    1 -> 3 [label="yes" color="#FF0000"]
+    1 -> 4 [label="no, missing" color="#0000FF"]
+
+    3 [ label="IMpaSv:.1<-0.396343052" ]
+    3 -> 5 [label="yes" color="#FF0000"]
+    3 -> 6 [label="no, missing" color="#0000FF"]
+
+    5 [ label="leaf=-0.0521833561" ]
+
+    6 [ label="DpaVddSv<0.59512639" ]
+    6 -> 7 [label="yes" color="#FF0000"]
+    6 -> 8 [label="no, missing" color="#0000FF"]
+
+    7 [ label="IMpaSv:.1<-0.344626486" ]
+    7 -> 9 [label="yes" color="#FF0000"]
+    7 -> 10 [label="no, missing" color="#0000FF"]
+
+    9 [ label="leaf=-0.022155134" ]
+
+    10 [ label="leaf=0.0857867524" ]
+
+    8 [ label="leaf=0.0898690447" ]
+
+    4 [ label="leaf=-0.0650987774" ]
+
+    2 [ label="leaf=-0.0928675979" ]
+}
