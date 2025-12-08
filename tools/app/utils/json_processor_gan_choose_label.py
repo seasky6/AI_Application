@@ -2,21 +2,23 @@ import json
 import os
 import numpy as np
 import pandas as pd
+import random
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.base import BaseEstimator, TransformerMixin
+from pathlib import Path
+
 # ==== 可选：GAN 开关与参数 ====
 USE_GAN = True                 # 需要时置 True；不想用就 False
 GAN_EPOCHS = 70               # 每类训练轮数
 GAN_BATCH_SIZE = 60
 GAN_SAMPLES_TARGET = 'max'     # 'max' 表示补齐到训练集中最多类的数量；也可填整数（如 1200）
-GAN_RANDOM_STATE = 2025
+GAN_RANDOM_SEED = 42
 
 # 仅在 USE_GAN=True 且本地已安装 sdv 时启用
 try:
-    from sdv.single_table.copulagan import CopulaGANSynthesizer
-    from sdv.metadata.single_table import SingleTableMetadata
+    from ctgan import CTGAN
     SDV_AVAILABLE = True
 except Exception:
     SDV_AVAILABLE = False
@@ -222,11 +224,11 @@ class TrainingDataProcessor:
         selection = int(input())
 
         if selection == 1:
-            df.drop(columns=['PA Status New'], inplace=True)
-            df.rename(columns={'PA Status Legacy': 'PA Status'}, inplace=True)
+            df.drop(columns=['PA Status Repair Info'], inplace=True)
+            df.rename(columns={'PA Status Pattern 2': 'PA Status'}, inplace=True)
         elif selection == 2:
-            df.drop(columns=['PA Status Legacy'], inplace=True)
-            df.rename(columns={'PA Status New': 'PA Status'}, inplace=True)
+            df.drop(columns=['PA Status Pattern 2'], inplace=True)
+            df.rename(columns={'PA Status Repair Info': 'PA Status'}, inplace=True)
         else:
             raise ValueError("Wrong input, please enter 1 or 2")
 
@@ -244,11 +246,12 @@ class TrainingDataProcessor:
                         'Serial': sample.get('Serial'),
                         'ProductName': sample.get('ProductName'),
                         'Timestamp': sample.get('Timestamp'),
-                        'PA Status Legacy': sample.get('PA Status Legacy'),
-                        'PA Status New': sample.get('PA Status New'),
+                        'PA Status Pattern 2': sample.get('PA Status Pattern 2'),
+                        'Symptoms': sample.get('Symptoms', ''),
+                        'PA Status Repair Info': sample.get('PA Status Repair Info'),
                         'Parameters': sample.get('Parameters', {})
                     }
-                    if processed['PA Status New'] != 'Unknown':
+                    if processed['PA Status Repair Info'] != 'Unknown':
                         all_samples.append(processed)
 
         df = pd.DataFrame(all_samples)
@@ -258,6 +261,7 @@ class TrainingDataProcessor:
 
         print(f"加载样本数: {len(df)}")
         return df
+
 
     def gan_generator_per_class(self, X_df, y_series):
         """
@@ -270,12 +274,17 @@ class TrainingDataProcessor:
             print("[GAN] 跳过：未启用或未安装 sdv")
             return X_df, y_series
 
-        import torch
-        use_cuda = torch.cuda.is_available()
         label_col = "__label__"
         df_tr = X_df.copy()
         df_tr[label_col] = y_series.values
         classes = sorted(df_tr[label_col].unique().tolist())
+
+        discrete_columns = [
+            'ProductName', 'desc', 'dpGainLoopEnable', 'dpTsEnable', 'dpd', 'dpdAutoStart', 'gainAutoStart',
+            'gainStateMachine', 'ganBoostModeEnable', 'ganBoostModeState', 'islastDelEstFracSuccess',
+            'linearizationStateMachine', 'shpAutoStart', 'status', 'subId', 'torSupported',
+            'PA Status'
+        ]
 
         # 计算每类目标样本数量
         from collections import Counter
@@ -298,36 +307,97 @@ class TrainingDataProcessor:
 
             print(f"[GAN] 训练 CopulaGAN 类别={c}, n={n_cur}, 生成={n_need}")
 
-            # 只给该类的数据拟合
-            metadata = SingleTableMetadata()
-            metadata.detect_from_dataframe(data=df_c)
+            # # 只给该类的数据拟合
+            # metadata = SingleTableMetadata()
+            # metadata.detect_from_dataframe(data=df_c)
+            #
+            # # 指定一些列为 categorical（如果存在）
+            # for col in ['gainStateMachine', 'ganBoostModeState', 'linearizationStateMachine',
+            #             'status', 'subId', 'ProductName', 'desc', 'dpd',
+            #             'dpGainLoopEnable', 'dpTsEnable', 'dpdAutoStart', 'gainAutoStart',
+            #             'ganBoostModeEnable', 'islastDelEstFracSuccess', 'shpAutoStart', 'torSupported']:
+            #     if col in df_c.columns:
+            #         metadata.update_column(col, sdtype='categorical')
 
-            # 指定一些列为 categorical（如果存在）
-            for col in ['gainStateMachine', 'ganBoostModeState', 'linearizationStateMachine',
-                        'status', 'subId', 'ProductName', 'desc', 'dpd',
-                        'dpGainLoopEnable', 'dpTsEnable', 'dpdAutoStart', 'gainAutoStart',
-                        'ganBoostModeEnable', 'islastDelEstFracSuccess', 'shpAutoStart', 'torSupported']:
-                if col in df_c.columns:
-                    metadata.update_column(col, sdtype='categorical')
+            # ctgan = CopulaGANSynthesizer(
+            #     metadata,
+            #     epochs=GAN_EPOCHS,
+            #     batch_size=GAN_BATCH_SIZE,
+            #     verbose=True,
+            #     default_distribution='gaussian_kde',
+            #     embedding_dim=64,
+            #     generator_dim=(128, 128),
+            #     discriminator_dim=(128, 128),
+            #     generator_lr=1e-4, generator_decay=1e-5,
+            #     discriminator_lr=1e-4, discriminator_decay=1e-5,
+            #     discriminator_steps=2,
+            #     pac=5,
+            #     cuda=use_cuda,
+            #     # random_state=GAN_RANDOM_STATE  # 某些版本不支持该参数
+            # )
 
-            ctgan = CopulaGANSynthesizer(
-                metadata,
+            # # ctgan.fit(df_c)
+            # # syn = ctgan.sample(n_need)
+            # ctgan = CTGAN(epochs=200, batch_size=128)
+            # ctgan.fit(df_encoded, discrete_columns=discrete_columns)
+            #
+            # # 3) 生成
+            # syn = ctgan.sample(2000)  # 含所有列；若纳入了标签，会直接生成标签
+
+            # 当前类训练数据：仅特征
+            train_df = df_c.drop(columns=[label_col])
+
+            # 只保留实际存在的离散列（防止传了不存在的列名）
+            disc_cols_present = [col for col in discrete_columns if col in train_df.columns]
+
+            import torch
+
+            # ===== 检测可用设备 =====
+            if torch.backends.mps.is_available():
+                device = "mps"
+                print("[Device] Using Apple Silicon GPU (MPS)")
+            elif torch.cuda.is_available():
+                device = "cuda"
+                print("[Device] Using NVIDIA GPU (CUDA)")
+            else:
+                device = "cpu"
+                print("[Device] Using CPU only")
+
+            # ===== 设置随机种子 =====
+            torch.manual_seed(GAN_RANDOM_SEED)
+            random.seed(GAN_RANDOM_SEED)
+            np.random.seed(GAN_RANDOM_SEED)
+            if device == "cuda":
+                torch.cuda.manual_seed_all(GAN_RANDOM_SEED)
+
+            # ===== 在训练前强制设置默认设备 =====
+            if device == "mps":
+                torch.set_default_device("mps")
+            elif device == "cuda":
+                torch.set_default_device("cuda")
+            else:
+                torch.set_default_device("cpu")
+
+            # ===== 实例化 CTGAN（不要传 device 参数）=====
+            ctgan = CTGAN(
                 epochs=GAN_EPOCHS,
                 batch_size=GAN_BATCH_SIZE,
-                verbose=True,
-                default_distribution='gaussian_kde',
-                embedding_dim=64,
                 generator_dim=(128, 128),
                 discriminator_dim=(128, 128),
-                generator_lr=1e-4, generator_decay=1e-5,
-                discriminator_lr=1e-4, discriminator_decay=1e-5,
-                discriminator_steps=2,
-                pac=5,
-                cuda=use_cuda,
-                # random_state=GAN_RANDOM_STATE  # 某些版本不支持该参数
+                verbose=True
             )
-            ctgan.fit(df_c)
+
+            print(f"[CTGAN] Training on {device.upper()} ...")
+
+            # ===== 训练 GAN =====
+            ctgan.fit(train_df, discrete_columns=disc_cols_present)
+
+            # 按需生成
             syn = ctgan.sample(n_need)
+
+            # 回填标签列
+            syn[label_col] = c
+            syn_list.append(syn)
 
             # 保护：确保标签列存在且为该类
             if label_col not in syn.columns:
@@ -600,7 +670,7 @@ class TrainingDataProcessor:
 
         if selection == 1:
             # 原本逻辑
-            label_map = {'Normal': 0, 'PA might broken': 1, 'PA broken': 2}
+            label_map = {'Normal': 0, 'PA abnormal': 1}
             df = df[df['PA Status'].isin(label_map.keys())]  # 过滤非法标签
             y = df['PA Status'].map(label_map).astype(int)
             return df, y
@@ -608,13 +678,13 @@ class TrainingDataProcessor:
         elif selection == 2:
             # 只保留两类标签
             def convert_label(x):
-                if x == 'PA might broken':
-                    return 'PA might broken'
+                if x == 'PA abnormal':
+                    return 'PA abnormal'
                 else:
-                    return 'PA might normal'
+                    return 'Normal'
 
             df['PA Status'] = df['PA Status'].apply(convert_label)
-            label_map = {'PA might normal': 0, 'PA might broken': 1}
+            label_map = {'Normal': 0, 'PA abnormal': 1}
             y = df['PA Status'].map(label_map).astype(int)
             return df, y
 
@@ -680,11 +750,18 @@ class TrainingDataProcessor:
 
 
 if __name__ == '__main__':
+
     # 使用示例
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
     ROOT_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, '../../../../'))
-    INPUT_DIR = os.path.join(ROOT_DIR, 'files_for_training')
-    OUTPUT_DIR = os.path.join(ROOT_DIR, 'processed_datasets')
+
+    INPUT_DIR = "/Users/sunjiaxiang/DeepLog_AI/tools/data/files_for_training"
+    OUTPUT_DIR = "/Users/sunjiaxiang/DeepLog_AI/tools/data/processed_dataset"
+    # INPUT_DIR = os.path.join(ROOT_DIR, 'files_for_training')
+    # OUTPUT_DIR = os.path.join(ROOT_DIR, 'processed_datasets')
+    print("ROOT_DIR:", ROOT_DIR)
+    print("OUTPUT_DIR:", OUTPUT_DIR)
+
 
     processor = TrainingDataProcessor(INPUT_DIR, OUTPUT_DIR)
     processor.process()
