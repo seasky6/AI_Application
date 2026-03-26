@@ -1,0 +1,61 @@
+{
+  "feature_importance": {
+    "IDpaSv:.3": 63.0,
+    "IMpaSv:.0": 1065.0,
+    "IDpaSv:.0": 858.0,
+    "powerLevel": 1131.0,
+    "torTemp": 1292.0,
+    "IMpaSv:.1": 897.0,
+    "PaVddSv": 1433.0,
+    "txPmb": 260.0,
+    "torGainBackoff": 186.0,
+    "txDpdGainDefault": 137.0,
+    "IDpaSv:.2": 83.0,
+    "txTorPmb": 715.0,
+    "dpdRestartCounter": 240.0,
+    "dpdNomPwr": 54.0,
+    "IMpaSv:.2": 32.0,
+    "txDpdPma": 157.0,
+    "powerClass": 209.0,
+    "IDpaSv:.1": 911.0,
+    "DpaVddSv": 1513.0,
+    "IMpaSv:.3": 3.0,
+    "LinAlarm": 1894.0,
+    "rfPower": 157.0,
+    "txPma": 129.0,
+    "txAtt": 1321.0,
+    "desc": 85.0,
+    "dpd": 38.0,
+    "gainStateMachine": 94.0,
+    "statusBit": 129.0,
+    "subId": 66.0,
+    "status": 127.0,
+    "linearizationStateMachine": 59.0,
+    "ganBoostModeEnable": 86.0,
+    "ganBoostModeState": 64.0
+  },
+  "eval_metrics": {
+    "accuracy": 0.9763539282990084,
+    "f1_scores": {
+      "macro": 0.9743653255173803,
+      "micro": 0.9763539282990084,
+      "weighted": 0.9763811587752824
+    }
+  },
+  "model_params": {
+    "objective": "multi:softmax",
+    "num_class": 2,
+    "max_depth": 5,
+    "learning_rate": 0.1,
+    "subsample": 0.9,
+    "colsample_bytree": 0.9,
+    "gamma": 2,
+    "reg_lambda": 5,
+    "reg_alpha": 1,
+    "min_child_weight": 3
+  },
+  "training_info": {
+    "best_iteration": 180,
+    "total_iterations": 211
+  }
+}

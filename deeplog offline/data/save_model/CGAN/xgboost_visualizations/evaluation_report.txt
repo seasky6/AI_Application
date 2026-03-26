@@ -1,0 +1,37 @@
+============================================================
+XGBoost 模型评估报告
+============================================================
+
+模型基本信息:
+训练数据路径: C:/Users/ehuabox/OneDrive - Ericsson/Desktop/Works/AI/AI for Log Analysis/deeplog/tools/data/processed_dataset/CGAN
+模型保存路径: C:/Users/ehuabox/OneDrive - Ericsson/Desktop/Works/AI/AI for Log Analysis/deeplog/tools/data/saved_models/Parameter Tuning/CGAN
+训练样本数: 27528
+验证样本数: 9176
+测试样本数: 9177
+特征数量: 33
+类别数量: 2
+
+========================================
+模型性能评估
+========================================
+准确率 (Accuracy): 0.9764
+F1 Score (Macro): 0.9744
+F1 Score (Micro): 0.9764
+F1 Score (Weighted): 0.9764
+
+详细分类报告:
+              precision    recall  f1-score   support
+
+           0     0.9844    0.9786    0.9815      5884
+           1     0.9621    0.9724    0.9672      3293
+
+    accuracy                         0.9764      9177
+   macro avg     0.9733    0.9755    0.9744      9177
+weighted avg     0.9764    0.9764    0.9764      9177
+
+========================================
+训练信息
+========================================
+总训练轮数: 211
+最佳迭代轮数: 180
+最佳验证分数: 0.02223190932868352

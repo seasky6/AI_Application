@@ -1,0 +1,145 @@
+================================================================================
+XGBoost 参数调优总结报告
+================================================================================
+
+生成时间: 2026-01-14 16:24:33
+数据集路径: C:\Users\ehuabox\OneDrive - Ericsson\Desktop\Works\AI\AI for Log Analysis\deeplog\tools\data\processed_dataset\Normal
+保存目录: C:\Users\ehuabox\OneDrive - Ericsson\Desktop\Works\AI\AI for Log Analysis\deeplog\tools\data\saved_models\Parameter Tuning\Normal\xgboost
+
+数据集统计:
+  训练集样本数: 26790
+  验证集样本数: 8930
+  测试集样本数: 8931
+  特征数量: 33
+  类别数量: 2
+
+================================================================================
+初始默认参数配置以及评分
+================================================================================
+
+默认配置:
+  objective: multi:softmax
+  eval_metric: ['mlogloss', 'merror']
+  seed: 42
+  tree_method: hist
+  early_stopping_rounds: 30
+  num_boost_round: 500
+  learning_rate: 0.1
+  n_estimators: 100
+  max_depth: 6
+  min_child_weight: 1
+  reg_alpha: 0
+  reg_lambda: 1
+  gamma: 0
+  subsample: 0.8
+  colsample_bytree: 0.8
+  num_class: 2
+
+模型评分:
+  F1 Score: 0.9735  
+  Accuracy: 0.9735
+  
+================================================================================
+各参数组最佳结果
+================================================================================
+
+Convergence and Learning Rate (第1组):
+    F1 Score: 0.9735
+    Accuracy: 0.9762
+    最佳迭代次数: 191
+    参数:
+      learning_rate: 0.2
+      n_estimators: 10
+
+  总参数组合数: 64
+
+Tree Complexity (第2组):
+    F1 Score: 0.9749
+    Accuracy: 0.9774
+    最佳迭代次数: 119
+    参数:
+      max_depth: 7
+      min_child_weight: 7
+
+  总参数组合数: 100
+
+Generalization Ability (第3组):
+    F1 Score: 0.9758
+    Accuracy: 0.9783
+    最佳迭代次数: 205
+    参数:
+      reg_alpha: 0
+      reg_lambda: 0
+      gamma: 0
+
+  总参数组合数: 343
+
+Randomness and Disturbance (第4组):
+    F1 Score: 0.9748
+    Accuracy: 0.9773
+    最佳迭代次数: 151
+    参数:
+      subsample: 1.0
+      colsample_bytree: 0.5
+
+  总参数组合数: 36
+
+================================================================================
+总体最佳结果
+================================================================================
+  最佳F1 Score: 0.9758
+  对应的Accuracy: 0.9783
+  来自参数组: Generalization Ability
+  最佳迭代次数: 205
+  参数组合:
+    reg_alpha: 0
+    reg_lambda: 0
+    gamma: 0
+
+================================================================================
+推荐参数配置
+================================================================================
+
+推荐配置:
+  objective: multi:softmax
+  eval_metric: ['mlogloss', 'merror']
+  seed: 42
+  tree_method: hist
+  early_stopping_rounds: 30
+  num_boost_round: 500
+  learning_rate: 0.2
+  n_estimators: 10
+  max_depth: 7
+  min_child_weight: 7
+  reg_alpha: 0
+  reg_lambda: 0
+  gamma: 0
+  subsample: 1.0
+  colsample_bytree: 0.5
+  num_class: 2
+
+预期性能:
+  F1 Score: 0.9758
+  Accuracy: 0.9783
+
+================================================================================
+统计信息
+================================================================================
+
+总参数组合数: 543
+F1 Score 统计:
+  平均值: 0.9540
+  标准差: 0.0202
+  最小值: 0.8771
+  最大值: 0.9758
+  中位数: 0.9569
+
+Accuracy 统计:
+  平均值: 0.9585
+  标准差: 0.0184
+  最小值: 0.8883
+  最大值: 0.9783
+  中位数: 0.9611
+
+F1 Score与Accuracy的相关系数: 1.0000
+  说明: F1 Score和Accuracy高度正相关

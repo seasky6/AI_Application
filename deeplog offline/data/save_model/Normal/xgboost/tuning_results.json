@@ -1,0 +1,35 @@
+{
+  "group1": {
+    "best_params": {
+      "learning_rate": 0.2,
+      "n_estimators": 10
+    },
+    "best_score": 0.9735135109772004,
+    "data_count": 64
+  },
+  "group2": {
+    "best_params": {
+      "max_depth": 7,
+      "min_child_weight": 7
+    },
+    "best_score": 0.9749029791421432,
+    "data_count": 100
+  },
+  "group3": {
+    "best_params": {
+      "reg_alpha": 0,
+      "reg_lambda": 0,
+      "gamma": 0
+    },
+    "best_score": 0.9758438333594328,
+    "data_count": 343
+  },
+  "group4": {
+    "best_params": {
+      "subsample": 1.0,
+      "colsample_bytree": 0.5
+    },
+    "best_score": 0.9747530443413313,
+    "data_count": 36
+  }
+}
