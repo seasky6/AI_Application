@@ -1,0 +1,83 @@
+/* ===== DeepLog Offline Dark Theme ===== */
+html, body, #app {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #111;                 /* 整体背景：深黑 */
+    color: #f2f2f2;                   /* 全局字体颜色：浅白 */
+    font-family: "Microsoft YaHei", sans-serif;
+}
+
+/* 顶部 HeaderBar（保持深色） */
+.header-bar {
+    background: #111;
+    border-bottom: 1px solid #444;
+    color: #fff;
+}
+
+/* 内容区域：卡片 / 容器 */
+.deeplog-container {
+    background: #1b1b1b;
+    border: 1px solid #555;
+    padding: 20px;
+    border-radius: 4px;
+}
+
+/* 输入框通用样式 */
+input,
+.el-input__inner {
+    background: #222 !important;
+    border: 1px solid #555 !important;
+    color: #fff !important;
+}
+
+/* 按钮样式 */
+.el-button {
+    background: #333 !important;
+    border: 1px solid #777 !important;
+    color: #fff !important;
+}
+
+.el-button:hover {
+    background: #444 !important;
+}
+
+/* 表格样式 */
+.el-table {
+    background: #1a1a1a !important;
+    color: #eee !important;
+}
+
+.el-table th {
+    background: #222 !important;
+    color: #fff !important;
+}
+
+.el-table tr {
+    background: #1a1a1a !important;
+}
+
+.el-table tr:hover > td {
+    background: #2a2a2a !important;
+}
+
+/* 分隔线 */
+hr, .el-divider {
+    border-color: #444 !important;
+}
+
+/* 标题 */
+h1, h2, h3, h4 {
+    color: #fff !important;
+}
+
+/* 下拉框 */
+.el-select .el-input__inner {
+    background: #222 !important;
+    color: #fff !important;
+}
+
+.dark {
+    --ericsson-footer-bg-dark: var(--bg-1);    /* 深灰，与 Header 一致 */
+    --ericsson-footer-fg-dark: var(--text-1);  /* 白色文本，与全局一致 */
+}

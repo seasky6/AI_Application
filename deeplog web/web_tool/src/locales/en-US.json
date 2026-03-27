@@ -1,0 +1,234 @@
+{
+  "app": {
+    "title": "DeepLog Web Tool"
+  },
+  "menu": {
+    "dashboard": "Dashboard",
+    "downloadLog": "Download Logs",
+    "processLog": "NFF Data Processing",
+    "samplePrediction": "PA Abnormal Prediction",
+    "dataAnalysis": "Data Analysis"
+  },
+  "footer": {
+    "copyright": "Copyright © {company} {yearRange} {product}. All rights reserved."
+  },
+  "dashboard": {
+    "welcomeTitle": "Welcome to use DeepLog",
+    "welcomeSubtitle": "AI-assisted Radio abnormal detection via log analysis"
+  },
+  "downloadLogPage": {
+    "title": "Sample Prediction",
+    "download": "Download Samples",
+    "downloadDesc": "Enter EID username and Key to download pending logs from PQAT",
+    "eidUser": "EID",
+    "eidKey": "Password",
+    "serialNumber": "Serials",
+    "logType": "Log Type",
+    "logTimeWindow": "Log Time",
+    "timeHint": "Selecting 'All' applies no filtering; Selecting 'Latest' applies to download the most latest entry; Entering a positive number N applies to retrieve the earliest N entries; To retrieve the last N entries, please set a negative value",
+    "downloadBtn": "Fetch Samples",
+    "placeholder1": "(Placeholder) The list of downloadable logs",
+    "bySn": "Group by SN",
+    "modeZip": "ZIP (all browsers)",
+    "modeDir": "Save to local directory (Chrome/Edge)",
+    "downloadAll": "Download all by SN",
+    "progress": "Progress"
+  },
+  "processLogPage": {
+    "common": {
+      "clear": "Clear",
+      "reset": "Reset"
+    },
+    "processLogs": {
+      "title": "NFF Data Processing",
+      "source": {
+        "title": "Select File/Files",
+        "desc": "You may choose .zip file directly, or add folder/folders to choose all .zip files inside",
+        "files": "Select Files",
+        "folders": "Select Folders",
+        "dropOrClick": "Drag ZIP files here, or",
+        "chooseFiles": "click to select",
+        "filesTip": "Only .zip files are supported; multiple selection allowed",
+        "addFolder": "Add Folder",
+        "clearFolders": "Clear Folders",
+        "folder": "Folder",
+        "folderCount": "{n} folders added",
+        "dirNotSupported": "Directory selection is not supported in this browser (use 'Select Files' instead)",
+        "filesChosen": "{n} files selected",
+        "foldersChosen": "{n} folders selected",
+        "radioType": "Radio Type",
+        "radioTypeTips": "Current version only supports Remote Radio and AAS AIR6449. To be continued for others"
+      },
+      "run": {
+        "title": "Start Processing",
+        "desc": "Once started, the system will unzip and extract structured log data. Concurrency and cancellation are supported",
+        "concurrency": "Concurrency",
+        "start": "Start Processing",
+        "cancel": "Cancel",
+        "exportCsv": "Export CSV",
+        "filesProgress": "Progress: {d}/{t} files",
+        "entriesAccum": "Extracted entries: {n}",
+        "errors": "Errors: {n}",
+        "saveCsvToDir": "Save to Directory",
+        "dirSaveNotSupported": "Directory saving is not supported in this browser. Please use 'Export CSV' instead"
+      },
+      "result": {
+        "title": "Process Results",
+        "desc": "Now support to extract LAT log and Proactive log for Remote Radio",
+        "chooseOutputDir": "Select Output Directory",
+        "outputDirLabel": "Output Directory",
+        "concurrencyDesc": "Concurrency on .zip processing (Max=6)",
+        "onProcess": "Process",
+        "onCancel": "Cancel",
+        "progress": "Progress",
+        "outFiles": "Output Files",
+        "skip": "Skip non-Proactive log",
+        "eventLog": "Event Log",
+        "placeholder": "No results yet. Please select a source and start processing."
+      },
+      "errors": {
+        "title": "Error List"
+      }
+    }
+  },
+
+  "predictPage": {
+    "common": {"clear": "Clear", "reset": "Reset"},
+
+    "processLogs": {
+      "title": "PA Abnormal Prediction",
+
+      "source": {
+        "title": "Select Data Source",
+        "desc": "You may choose .zip files directly, or add multiple folders and recursively process all .zip files inside",
+        "files": "Select Files",
+        "folders": "Select Folders",
+        "dropOrClick": "Drag ZIP files here, or",
+        "chooseFiles": "click to select",
+        "filesTip": "Only .zip files are supported; multiple selection allowed",
+        "addFolder": "Add Folder",
+        "clearFolders": "Clear Folders",
+        "folder": "Folder",
+        "folderCount": "{n} folders added",
+        "dirNotSupported": "Directory selection is not supported in this browser (use 'Select Files' instead)",
+        "filesChosen": "{n} files selected",
+        "foldersChosen": "{n} folders selected"
+      },
+
+      "run": {
+        "title": "Start Processing",
+        "desc": "Once started, the system will unzip and extract structured log data. Concurrency and cancellation are supported",
+        "concurrency": "Concurrency",
+        "concurrencyDesc": "Concurrency on .zip processing (Max=8)",
+        "start": "Start Processing",
+        "cancel": "Cancel",
+        "filesProgress": "Progress: {d}/{t} files",
+        "entriesAccum": "Extracted entries: {n}",
+        "errors": "Errors: {n}",
+        "chooseOutputDir": "Choose Output Directory",
+        "clearOutputDir": "Clear Output Directory",
+        "outputDirLabel": "Output Directory"
+      },
+
+      "result": {
+        "title": "Processing Results",
+        "desc2": "List of extracted and parsed files per ZIP, click to open",
+        "srcZip": "Source ZIP",
+        "outXlsx": "Extracted Excel (*_extracted.xlsx)",
+        "outParsedJson": "Parsed JSON (*_extracted_parsed.json)",
+        "outParsedXlsx": "Parsed Excel (*_extracted_parsed.xlsx)",
+        "paSamplesJson": "PA abnormal samples JSON (SN_entry_sample_generated.json)",
+        "paSamplesXlsx": "PA abnormal samples Excel (SN_entry_sample_generated.xlsx)",
+        "samplesPreJson": "PA abnormal preprocessed samples JSON (<serial>_entry_sample_generated_preprocessed.json)",
+        "samplesPreXlsx": "PA abnormal preprocessed samples XLSX (<serial>_entry_sample_generated_preprocessed.xlsx)",
+        "location": "Location",
+        "placeholder": "No generated files yet. Please select a source and start processing."
+
+      },
+
+      "errors": {"title": "Error List"}
+    },
+
+    "model": {
+      "title": "Prediction",
+      "desc": "Run XGBoost (without/with CGAN) on preprocessed samples and synthesize the final decision",
+      "sourceHint": "Batches ready for prediction: {n} (from preprocessed samples)",
+      "load": "Load Models",
+      "loaded": "Models Loaded",
+      "run": "Run Prediction",
+      "clear": "Clear Results",
+      "print": "Print Report",
+      "progressFiles": "Batch Progress: {d}/{t}",
+      "progressSteps": "Step Progress: {d}/{t}",
+      "errors": "Errors: {n}",
+      "resultSummary": "Product-level Summary",
+      "resultSummaryDesc": "Aggregated by product (Serial + ProductName) with dual-model voting and ratios",
+      "resultDetails": "Entry-level Details",
+      "resultDetailsDesc": "Each sample’s timestamp, source file and predictions from two models",
+      "final": "Final",
+      "errorList": "Prediction Errors",
+      "col": {
+        "serial": "Serial",
+        "productName": "Product",
+        "timestamp": "Timestamp",
+        "sourceFile": "Source File",
+        "normalModel": "XGBoost (no CGAN)",
+        "cganModel": "XGBoost (with CGAN)",
+        "finalDecision": "Final Decision",
+        "distribution": "Distribution"
+      },
+      "dist": "PA Abnormal: {pa}%, PA Normal: {nor}%"
+    }
+  },
+
+  "dataAnalysisPage": {
+    "title": "Data Analysis",
+    "common": {
+      "clear": "Clear",
+      "reset": "Reset"
+    },
+    "database": {
+      "title": "Database",
+      "desc": "Build a local database from saved log files to enable query/CRUD operations.",
+      "sourceFolder": "Source Folder",
+      "pickFolderBtn": "Choose Folder",
+      "pickFolderPlaceholder": "Pick the root folder containing .zip logs, e.g. database\\Milano\\Radio 2271 B0C\\dcdc_issues\\CN3A023818",
+      "fsUnavailableHint": "Your browser does not support directory picking (use Microsoft Edge or Chrome).",
+      "importButton": "Import Data",
+      "importSummary": "Import Summary",
+      "scannedZips": "ZIP files scanned",
+      "parsedByPath": "Identified by path",
+      "needPqat": "Need PQAT lookup",
+      "extlogCount": "Extlog count",
+      "proactiveCount": "Proactive count",
+      "detectedInfo": "Detected Product Info",
+      "sampleRecords": "Sample Records",
+      "eidUser": "EID",
+      "eidKey": "Password",
+      "uniqueSNs": "Unique SNs",
+      "invalidSnCount": "Invalid SNs",
+      "pqatQueried": "PQAT Queried",
+      "logTypeDistribution": "Log Type Distribution",
+      "searchSnPlaceholder": "Filter by Serial Number (SN)…",
+      "reloadDbBtn": "Reload DB",
+      "col": {
+        "serialNumber": "Serial Number",
+        "productName": "Product Name",
+        "firstDate": "First Date",
+        "lastDate": "Last Date",
+        "logTypes": "Log Types",
+        "subLogTypes": "Sub Log Types",
+        "zipCount": "ZIP Count"
+      }
+    },
+    "analysis": {
+      "title": "Data Analysis",
+      "chooseDbFile": "Choose DB File",
+      "chooseDbBtn": "Choose DB",
+      "analysisType": "Analysis Option",
+      "chartType": "Chart Type",
+      "analyzeBtn": "Analyze",
+      "result": "Result"
+    }
+  }
+}

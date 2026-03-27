@@ -1,0 +1,56 @@
+1. DownloadLogs.vue
+2. ProcessLogs.vue 逻辑结构
+    第一部分：待处理文件
+        待处理源文件选择
+        支持处理 Radio 类型声明
+        输出目录选择
+        状态反馈
+        遍历目录中的 ZIP
+        ZIP 中的 .log
+        并发控制
+    第二部分：文件处理
+        一. 通用工具函数 (for both LAT and Proactive)
+            toLines()
+            escapeRe()
+            grepWithLineno()
+            ensureDir()
+            writeTextFile()
+            buildKeywordLineSection()
+            buildCommandBlockSection()
+        二. LAT Log (Return Log): 通用函数
+            zipBaseName()
+            readCmdFileText()
+            processLatCommon()
+            buildLatHwFaultReport() *
+            hasHwFaultSignals()
+            writeGroupedReport()
+            buildLatOtherFaultReports() *
+        三. LAT Log (Return Log): Remote Radio 工具函数
+            processLatRemote() -> writeTextFile(), buildLatHwFaultReport(), buildLatOtherFaultReports
+        四. LAT Log (Return Log): AAS AIR6449 工具函数
+            processLatAasAir6449() -> 完全复用 processLatRemote() -> writeTextFile(), buildLatHwFaultReport(), buildLatOtherFaultReports
+        五. Proactive Log: 通用函数
+            isProactiveZipName()
+            parseProNameParts()
+            extractRootCommandBlock()
+            findValidLhshOutputBlock()
+            parsePortsFromProReport()
+            extractDollarCommandBlock()
+            nowLocalTimestampUTC8()
+            grep()
+        六. Proactive Log: Remote Radio 工具函数
+            buildLinkFailureReportText() *
+            buildHwPartialFaultReportText() *
+            buildEachRuProReportText() *
+            buildAlarmDiagnosticReportText() *
+
+            processProactiveRemote() -> writeTextFile(), buildLinkFailureReportText(), buildHwPartialFaultReportText(),
+                buildEachRuProReportText(), buildAlarmDiagnosticReportText()
+        七. Proactive Log: AAS AIR6419 工具函数
+            buildHwPartialFaultReportTextAas() *
+
+            processProactiveAasAir6449() -> writeTextFile(), buildLinkFailureReportText(), buildHwPartialFaultReportTextAas(),
+        八. Overall onProcess / onCancel
+            onProcess() -> processLatCommon(), processLatRemote()/processLatAasAir6449(), processProactiveRemote(), processProactiveAasAir6449()
+3. PredictSamples.vue
+4. DataAnalysis.vue

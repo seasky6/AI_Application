@@ -1,0 +1,230 @@
+{
+  "app": {
+    "title": "DeepLog 网页版"
+  },
+  "menu": {
+    "dashboard": "首页",
+    "downloadLog": "日志下载",
+    "processLog": "NFF数据处理",
+    "samplePrediction": "PA异常预测",
+    "dataAnalysis": "数据分析"
+  },
+  "footer": {
+    "copyright": "Copyright © {company} {yearRange} {product}. 保留所有权利."
+  },
+  "dashboard": {
+    "welcomeTitle": "欢迎使用 DeepLog",
+    "welcomeSubtitle": "基于日志的 Radio 智能异常检测"
+  },
+  "downloadLogPage": {
+    "title": "日志下载",
+    "download": "数据下载",
+    "downloadDesc": "输入EID与密码，从 PQAT 下载待处理样本数据",
+    "eidUser": "EID",
+    "eidKey": "密码",
+    "serialNumber": "下载串号",
+    "logType": "下载日志种类",
+    "logTimeWindow": "下载日志时间",
+    "timeHint": "说明：1. 若选 All 下载所有日志；2. 若选 Latest 仅下载取最新一条；3. 若填 N（正数）代表取最新的 N 条，(若希望取最老的 N 条请输入负值 [待实现])",
+    "downloadBtn": "获取样本",
+    "placeholder1": "（占位）此处将显示下载日志文件列表",
+    "bySn": "按 SN 分组",
+    "modeZip": "ZIP 打包下载（通用）",
+    "modeDir": "保存到本地目录（Chrome/Edge）",
+    "downloadAll": "按 SN 下载全部",
+    "progress": "下载进度"
+  },
+  "processLogPage": {
+    "common": {
+      "clear": "清空",
+      "reset": "重置"
+    },
+    "processLogs": {
+      "title": "NFF数据处理",
+      "source": {
+        "title": "选择待处理文件",
+        "desc": "可以选择单个 .zip 文件，或者选择添加文件夹处理其下所有的 .zip 文件",
+        "files": "选择文件",
+        "folders": "选择文件夹",
+        "dropOrClick": "拖拽 ZIP 文件到此处，或",
+        "chooseFiles": "点击选择",
+        "filesTip": "仅处理 .zip 文件；可多选(通过添加文件夹)",
+        "addFolder": "添加文件夹",
+        "clearFolders": "清空文件夹",
+        "folder": "文件夹",
+        "folderCount": "已添加 {n} 个文件夹",
+        "dirNotSupported": "浏览器不支持目录选择（请使用“选择文件”）",
+        "filesChosen": "已选择 {n} 个文件",
+        "foldersChosen": "已选择 {n} 个文件夹",
+        "radioType": "Radio 类型",
+        "radioTypeTips": "当前版本仅支持 Remote Radio 以及 AAS AIR6449， 其它型号将在后续版本中补充"
+      },
+      "run": {
+        "title": "开始处理",
+        "desc": "点击开始后将解压并抽取日志内容，支持并发与取消",
+        "concurrency": "并发数",
+        "start": "开始处理",
+        "cancel": "取消",
+        "exportCsv": "导出 CSV",
+        "filesProgress": "文件进度：{d}/{t}",
+        "entriesAccum": "累计抽取条目：{n}",
+        "errors": "错误：{n}",
+        "saveCsvToDir": "保存到目录",
+        "dirSaveNotSupported": "当前浏览器不支持目录保存，请使用“导出 CSV”下载"
+      },
+      "result": {
+        "title": "处理结果",
+        "desc": "目前支持处理 Remote Radio 中的 LAT log 和 Proactive log",
+        "chooseOutputDir": "选择输出目录",
+        "outputDirLabel": "输出目录",
+        "concurrencyDesc": "并行处理文件数目(最多6个)",
+        "onProcess": "开始处理",
+        "onCancel": "取消",
+        "progress": "进度",
+        "outFiles": "输出文件",
+        "skip": "跳过(非 Proactive Log)",
+        "eventLog": "执行日志",
+        "placeholder": "暂无结果，请先选择来源并开始处理"
+      },
+      "errors": {
+        "title": "错误列表"
+      }
+    }
+  },
+  "predictPage": {
+    "common": {
+      "clear": "清空",
+      "reset": "重置"
+    },
+    "processLogs": {
+      "title": "PA异常预测",
+      "source": {
+        "title": "数据下载与数据处理",
+        "desc": "请提供待分析样本的串号",
+        "files": "选择文件",
+        "folders": "选择文件夹",
+        "dropOrClick": "拖拽 ZIP 文件到此处，或",
+        "chooseFiles": "点击选择",
+        "filesTip": "仅处理 .zip 文件；可多选(通过添加文件夹)",
+        "addFolder": "添加文件夹",
+        "clearFolders": "清空文件夹",
+        "folder": "文件夹",
+        "folderCount": "已添加 {n} 个文件夹",
+        "dirNotSupported": "浏览器不支持目录选择（请使用“选择文件”）",
+        "filesChosen": "已选择 {n} 个文件",
+        "foldersChosen": "已选择 {n} 个文件夹"
+      },
+      "run": {
+        "title": "开始处理",
+        "desc": "点击开始后将解压并抽取日志内容。支持并发与取消",
+        "concurrency": "并发数",
+        "concurrencyDesc": "并行处理文件数目(最多8个)",
+        "start": "开始处理",
+        "cancel": "取消",
+        "filesProgress": "文件处理进度：{d}/{t} 个ZIP",
+        "entriesAccum": "累计抽取条目：{n}",
+        "errors": "错误：{n}",
+        "chooseOutputDir": "选择输出目录",
+        "clearOutputDir": "清空输出目录",
+        "outputDirLabel": "输出目录"
+      },
+      "result": {
+        "title": "数据处理结果",
+        "desc2": "展示每个 ZIP 对应的抽取与解析文件，点击文件名可直接打开",
+        "srcZip": "原 ZIP 文件",
+        "outXlsx": "抽取 Excel 文件 (*_extracted.xlsx)",
+        "outParsedJson": "解析 JSON 文件 (*_extracted_parsed.json)",
+        "outParsedXlsx": "解析 Excel 文件 (*_extracted_parsed.xlsx)",
+        "paSamplesJson": "PA异常样本 JSON 文件 (SN_entry_sample_generated.json)",
+        "paSamplesXlsx": "PA异常样本 Excel 文件 (SN_entry_sample_generated.xlsx)",
+        "samplesPreJson": "PA异常样本预处理 JSON 文件 (SN_entry_sample_generated_preprocessed.json)",
+        "samplesPreXlsx": "PA异常样本预处理 Excel 文件 (SN_entry_sample_generated_preprocessed.xlsx)",
+        "location": "保存位置",
+        "placeholder": "尚无生成文件，请先选择来源并开始处理"
+      },
+      "errors": {
+        "title": "错误列表"
+      }
+    },
+    "model": {
+      "title": "模型预测",
+      "desc": "使用 XGBoost（无CGAN/有CGAN）对预处理样本进行预测，并合成最终结论",
+      "sourceHint": "可用于预测的批次：{n}（来自“样本预处理”生成）",
+      "load": "加载模型",
+      "loaded": "模型已加载",
+      "run": "开始预测",
+      "clear": "清空结果",
+      "print": "打印报告",
+      "progressFiles": "批次进度：{d}/{t}",
+      "progressSteps": "步骤进度：{d}/{t}",
+      "errors": "错误：{n}",
+      "resultSummary": "产品级预测汇总",
+      "resultSummaryDesc": "按产品（Serial + ProductName）聚合，显示两模型投票结果及比例",
+      "resultDetails": "条目级预测详情",
+      "resultDetailsDesc": "每条样本的时间戳、来源文件，以及两个模型的预测标签",
+      "final": "最终结论",
+      "errorList": "预测错误列表",
+      "col": {
+        "serial": "串号",
+        "productName": "产品型号",
+        "timestamp": "时间戳",
+        "sourceFile": "来源文件",
+        "normalModel": "XGBoost（无CGAN）",
+        "cganModel": "XGBoost（有CGAN）",
+        "finalDecision": "最终判定",
+        "distribution": "分布"
+      },
+      "dist": "PA Abnormal: {pa}%，PA Normal: {nor}%"
+    }
+  },
+  "dataAnalysisPage": {
+    "title": "数据分析",
+    "common": {
+      "clear": "清空",
+      "reset": "重置"
+    },
+    "database": {
+      "title": "数据库",
+      "desc": "从本地已保存的日志文件构建数据库，以支持查询/添加/修改/删除等操作。",
+      "sourceFolder": "数据源路径",
+      "pickFolderBtn": "选择文件夹",
+      "pickFolderPlaceholder": "请选择包含 .zip 日志的根目录，例如 database\\Milano\\Radio 2271 B0C\\dcdc_issues\\CN3A023818",
+      "fsUnavailableHint": "当前浏览器不支持目录选择（建议使用 Microsoft Edge 或 Chrome）。",
+      "importButton": "导入数据",
+      "importSummary": "导入结果",
+      "scannedZips": "扫描到的 ZIP 数量",
+      "parsedByPath": "已通过路径识别产品信息的数量",
+      "needPqat": "需要访问 PQAT 获取信息的数量",
+      "extlogCount": "Extlog 数量",
+      "proactiveCount": "Proactive Log 数量",
+      "detectedInfo": "识别出的产品信息",
+      "sampleRecords": "样本记录（部分）",
+      "eidUser": "EID 账户",
+      "eidKey": "EID 密码",
+      "uniqueSNs": "唯一串号数量",
+      "invalidSnCount": "无效串号数量",
+      "pqatQueried": "已查询 PQAT 的串号数量",
+      "logTypeDistribution": "日志类型分布",
+      "searchSnPlaceholder": "输入串号（SN）过滤…",
+      "reloadDbBtn": "重新读取数据库",
+      "col": {
+        "serialNumber": "串号",
+        "productName": "产品名称",
+        "firstDate": "最早日期",
+        "lastDate": "最晚日期",
+        "logTypes": "日志类型",
+        "subLogTypes": "子日志种类",
+        "zipCount": "ZIP 文件数量"
+      }
+    },
+    "analysis": {
+      "title": "数据分析",
+      "chooseDbFile": "数据库文件",
+      "chooseDbBtn": "选择数据库",
+      "analysisType": "分析选项",
+      "chartType": "图表类型",
+      "analyzeBtn": "开始分析",
+      "result": "分析结果"
+    }
+  }
+}

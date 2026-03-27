@@ -1,0 +1,144 @@
+:root {
+    /* 基础背景色（符合 Ericsson 冷色深灰） */
+    --bg-0: #0f141a;      /* 页面主背景 */
+    --bg-1: #161c22;      /* 顶部导航、侧栏 */
+    --bg-2: #1d242c;      /* 卡片、内容块 */
+
+    /* 文本 */
+    --text-1: #ffffff;    /* 主文字 */
+    --text-2: #b9c1c9;    /* 次要文本 */
+
+    /* 边框 & 分隔线 */
+    --border: #2a313a;
+
+    /* Ericsson 品牌蓝 */
+    --e-blue: #0099cc;
+    --e-blue-hover: #32b4e3;
+    --e-blue-light: #66ccff;
+
+    /* 圆角与布局 */
+    --radius: 4px;
+    --spacing: 16px;
+
+    /* Footer 采用全局浅色模式（与 header/background 保持一致） */
+    --ericsson-border: var(--border);
+
+    --ericsson-footer-bg: #ffffff;      /* 白底（明亮主题下） */
+    --ericsson-footer-fg: #333333;      /* 深灰文字 */
+}
+
+/* 全局背景与字体 */
+html, body, #app {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: "Ericsson Hilda", "Roboto", "Segoe UI", sans-serif;
+    line-height: 1.6;
+}
+
+/* 页面主区域居中 */
+.app-main {
+    padding: 24px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* HeaderBar */
+.header-bar {
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    height: 60px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-left .title {
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--text-1);
+}
+
+/* 卡片区域 */
+.deeplog-card {
+    background: var(--bg-2);
+    padding: 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+
+/* 输入框（Element Plus） */
+.el-input__wrapper {
+    background-color: #e8f0ff !important;
+    border: 1px solid #2a313a !important;
+    box-shadow: none !important;
+}
+
+/* 内部文字输入区透明，确保与 wrapper 背景一致 */
+.el-input__inner {
+    background-color: transparent !important;
+}
+
+/* 密码图标区域（右侧）背景也保持一致 */
+.el-input__suffix,
+.el-input__prefix {
+    background-color: #e8f0ff !important;
+}
+
+/* 下拉框 / 文本域保持同样视觉背景 */
+.el-textarea__inner {
+    background-color: #e8f0ff !important;
+    border: 1px solid #2a313a !important;
+    box-shadow: none !important;
+    color: var(--bg-1) !important;
+}
+
+
+/* 按钮（Ericsson 蓝强调） */
+.el-button--primary {
+    background: var(--e-blue) !important;
+    border-color: var(--e-blue) !important;
+    color: #fff !important;
+    border-radius: var(--radius) !important;
+}
+
+.el-button--primary:hover {
+    background: var(--e-blue-hover) !important;
+}
+
+.el-button--default {
+    background: var(--bg-1) !important;
+    border-color: var(--border) !important;
+    color: var(--text-1) !important;
+}
+
+.el-button--default:hover {
+    background: var(--bg-2) !important;
+    border-color: var(--e-blue-light) !important;
+    color: var(--e-blue-light) !important;
+}
+
+/* 表格深色风格 */
+.el-table {
+    --el-table-bg-color: var(--bg-2);
+    --el-table-text-color: var(--text-1);
+    --el-table-header-bg-color: var(--bg-1);
+    --el-table-header-text-color: var(--text-1);
+    --el-table-border-color: var(--border);
+}
+
+/* 分隔线 */
+.divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+}
