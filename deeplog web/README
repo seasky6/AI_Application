@@ -1,0 +1,76 @@
+DeepLog web tool is built upon [VUE + TypeScript + Vite] framework as Web frontend and backend plus a light Flask backend for prediction via interacting with ML models
+
+Project Structure:
+
+deeplog_web_tool/
+├── .idea/                                      # WebStorm IDE 配置文件
+├── reference/                                  # 参考文档、设计文档等
+├── web_tool/                                   # 1. Web section - Vue 子项目
+│   ├── public/                                 # 静态资源 (favicon、logo等)
+│   │   └── ericsson_logo.png                   # Ericsson logo 图片
+│   ├── src/                                    # 源代码
+│   │   ├── api/                                # 调用外部 API
+│   │   │   ├── pqat.ts                         # 调用 PQAT API
+│   │   │   ├── predict.ts                      # 调用自定义模型预测 (Flask) API
+│   │   ├── assets/                             # 图片/样式
+│   │   │   ├── styles/                         # 样式表
+│   │   │   │   ├── dark-theme.css              # Dark 主题样式
+│   │   │   │   ├── ericsson-dark.css           # Ericsson Dark 主题样式
+│   │   │   ├── ericsson_logo.png               # Ericsson logo 图片
+│   │   ├── components/                         # 页面基础布局
+│   │   │   ├── data-analysis/                  # 页面 数据分析 由两部分构成 - Database section & Data Analysis section
+│   │   │   │   ├── AnalyticsSection.vue        # 页面 数据分析 Data Analysis section
+│   │   │   │   ├── DatabaseSection.vue         # 页面 数据分析 Database section
+│   │   │   ├── HeaderBar.vue                   # 页面 Header layout
+│   │   │   ├── HeaderTabs.vue                  # 页面 Header 路由 [中间]
+│   │   │   ├── LanguageSwitcher.vue            # 页面 Header 中英文切换 [右侧]
+│   │   │   ├── FooterBar.vue                   # 页面 Booter 底部内容 [工具版权以及年限声明]
+│   │   ├── locales/                            # 中/英文切换
+│   │   │   ├── index.ts                        # 初始化 Vue 应用的国际化(i18n)支持
+│   │   │   ├── en-US.json                      # 英文
+│   │   │   ├── zh-CN.json                      # 中文
+│   │   ├── router/                             # 页面路由
+│   │   │   ├── index.ts                        # 各页面路由声明
+│   │   ├── types/                              # TS类型定义
+│   │   │   ├── index.d.ts                      # TS接口和类型定义
+│   │   ├── utils/                              # 工具函数
+│   │   │   ├── zipExtractor.ts                 # 日志内容抽取(处理 .zip 文件)
+│   │   │   ├── logParser.ts                    # 内容核心信息解析(处理 *_extracted.xlsx 文件)
+│   │   │   ├── xlsx.ts                         # 读/写 extracted 与 parsed 的通用函数 (封装 XLSX）
+│   │   │   ├── paSampleGenerator.ts            # PA异常预测 样本生成 (SN_entry_sample_generated.json, SN_entry_sample_generated.xlsx 文件)
+│   │   │   ├── paSamplePreprocessor.ts         # PA异常预测 样本预处理 (SN_entry_sample_generated_preprocessed.json, SN_entry_sample_generated_preprocessed.xlsx 文件)
+│   │   ├── views/                              # 各功能页面
+│   │   │   ├── Dashboard.vue                   # 首页
+│   │   │   ├── DownloadLogs.vue                # 日志下载页
+│   │   │   ├── ProcessLogs.vue                 # NFF数据处理页
+│   │   │   ├── PredictSamples.vue              # PA异常预测页
+│   │   │   ├── DataAnalysis.vue                # 数据分析页
+│   │   │   └── README.md                       # 各模块功能说明
+│   │   ├── App.vue                             # 根组件（语言切换/基础布局）
+│   │   └── main.ts                             # 入口文件
+│   ├── .env.development                        # VITE 与 Predict 后端交互API TOKEN 声明
+│   ├── .env.production                         # VITE 与 Predict 后端交互API TOKEN 声明
+│   ├── index.html                              # HTML 模板
+│   ├── package.json                            # 依赖与脚本
+│   ├── tsconfig.json                           # TypeScript 配置
+│   ├── tsconfig.node.json                      # 针对 Node 构建 TypeScript 配置
+│   ├── vite.config.ts                          # Vite 配置 调用 external API
+│   └── README.md                               # 项目 web 前后端部分说明
+└── README                                      # 项目总说明 (Vue & Node.js 前后端 + AI/ML(Flask) 后端)
+├── ml_backend/                                 # 2. Flask section - 后端 Flask(Python) 子项目
+│   ├── app.py                                  # Flask API (提供 ML Model API 用于预测/推理)
+│   ├── model_runtime.py                        # 基于 web 前端取回的待预测样本文件, 做数据处理 + 喂给训练好的 ML Model 做预测
+│   ├── requirements.txt                        # 功能实现依赖环境声明，方便pip
+│   ├── .env                                    # Flask 后端接口配置
+│   └── models/                                 # 模型相关文件
+│       └── xgboost/
+│           ├── normal/                         # XGBoost 基于原始训练集
+│           │   ├── xgboost_model.json          # XGBoost 模型文件
+│           │   ├── encoder.pkl                 # XGBoost 模型训练 非数值特征的编码规则
+│           │   ├── scaler.pkl                  # XGBoost 模型训练 数值特征的归一化参数
+│           │   └── metadata.json               # XGBoost 训练特征值
+│           └── cgan/                           # XGBoost 基于 CGAN 处理后的训练集
+│           │   ├── xgboost_model.json          # XGBoost 模型文件
+│           │   ├── encoder.pkl                 # XGBoost 模型训练 非数值特征的编码规则
+│           │   ├── scaler.pkl                  # XGBoost 模型训练 数值特征的归一化参数
+│           │   └── metadata.json               # XGBoost 训练特征值
